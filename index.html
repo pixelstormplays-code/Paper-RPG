@@ -6,6 +6,179 @@
 
 <style>
 body {
+  font-family: "Comic Sans MS", sans-serif;
+  background: #cce6ff;
+  text-align: center;
+}
+
+#game {
+  width: 480px;
+  margin: auto;
+  border: 5px solid black;
+  background: white;
+}
+
+.hidden { display: none; }
+
+/* OVERWORLD */
+#overworld {
+  height: 240px;
+  position: relative;
+  background: #9be29b;
+}
+
+.player, .enemy {
+  width: 24px;
+  height: 24px;
+  position: absolute;
+  border: 2px solid black;
+}
+
+.player { background: red; }
+.enemy { background: brown; }
+
+/* BATTLE */
+#battle {
+  padding: 10px;
+}
+
+.hpbar {
+  height: 16px;
+  background: red;
+  margin: 4px auto;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Paper TTYD Lite</h1>
+
+<div id="game">
+
+  <!-- OVERWORLD -->
+  <div id="overworld">
+    <div id="player" class="player"></div>
+    <div id="enemy" class="enemy"></div>
+  </div>
+
+  <!-- BATTLE -->
+  <div id="battle" class="hidden">
+    <p><strong>Hero</strong></p>
+    <div id="playerHP" class="hpbar"></div>
+
+    <p><strong>Enemy</strong></p>
+    <div id="enemyHP" class="hpbar"></div>
+
+    <p id="dialogue">Choose an action</p>
+    <button onclick="attack()">Jump</button>
+  </div>
+
+</div>
+
+<script>
+/* ---------- GAME STATE ---------- */
+let mode = "overworld";
+
+/* ---------- OVERWORLD ---------- */
+const player = { x: 20, y: 100 };
+const enemy = { x: 200, y: 100 };
+
+const playerEl = document.getElementById("player");
+const enemyEl = document.getElementById("enemy");
+
+function drawOverworld() {
+  playerEl.style.left = player.x + "px";
+  playerEl.style.top = player.y + "px";
+  enemyEl.style.left = enemy.x + "px";
+  enemyEl.style.top = enemy.y + "px";
+}
+
+drawOverworld();
+
+document.addEventListener("keydown", e => {
+  if (mode !== "overworld") return;
+
+  const speed = 5;
+  if (e.key === "ArrowUp") player.y -= speed;
+  if (e.key === "ArrowDown") player.y += speed;
+  if (e.key === "ArrowLeft") player.x -= speed;
+  if (e.key === "ArrowRight") player.x += speed;
+
+  drawOverworld();
+  checkCollision();
+});
+
+function checkCollision() {
+  if (
+    Math.abs(player.x - enemy.x) < 20 &&
+    Math.abs(player.y - enemy.y) < 20
+  ) {
+    startBattle();
+  }
+}
+
+/* ---------- BATTLE ---------- */
+let playerHP = 20;
+let enemyHP = 15;
+let timing = false;
+
+function startBattle() {
+  mode = "battle";
+  document.getElementById("overworld").classList.add("hidden");
+  document.getElementById("battle").classList.remove("hidden");
+  updateHP();
+}
+
+function updateHP() {
+  document.getElementById("playerHP").style.width = playerHP * 5 + "px";
+  document.getElementById("enemyHP").style.width = enemyHP * 5 + "px";
+}
+
+function attack() {
+  timing = true;
+  document.getElementById("dialogue").textContent = "Press SPACE now!";
+  setTimeout(enemyTurn, 700);
+}
+
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" && timing) {
+    enemyHP -= 5;
+    timing = false;
+    updateHP();
+    document.getElementById("dialogue").textContent = "Nice hit!";
+  }
+});
+
+function enemyTurn() {
+  if (enemyHP <= 0) {
+    document.getElementById("dialogue").textContent = "You win!";
+    setTimeout(endBattle, 1000);
+    return;
+  }
+
+  playerHP -= 3;
+  updateHP();
+  document.getElementById("dialogue").textContent = "Enemy attacks!";
+}
+
+function endBattle() {
+  mode = "overworld";
+  enemy.x = -100; // remove enemy
+  document.getElementById("battle").classList.add("hidden");
+  document.getElementById("overworld").classList.remove("hidden");
+}
+</script>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Paper TTYD Lite</title>
+
+<style>
+body {
   background: radial-gradient(circle at center, #fff 0%, #dbe8ff 70%);
   font-family: "Comic Sans MS", sans-serif;
   text-align: center;
