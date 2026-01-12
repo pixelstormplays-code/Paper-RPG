@@ -2,73 +2,114 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Paper RPG Demo</title>
+<title>Paper TTYD Lite</title>
+
 <style>
-  body {
-    font-family: "Comic Sans MS", sans-serif;
-    background: #e6f2ff;
-    text-align: center;
-  }
+body {
+  background: radial-gradient(circle at center, #fff 0%, #dbe8ff 70%);
+  font-family: "Comic Sans MS", sans-serif;
+  text-align: center;
+}
 
-  #battle {
-    width: 400px;
-    margin: auto;
-    padding: 20px;
-    background: white;
-    border: 4px solid black;
-    box-shadow: 8px 8px 0 black;
-  }
+#stage {
+  width: 480px;
+  margin: auto;
+  background: #fff;
+  border: 5px solid black;
+  box-shadow: 10px 10px 0 black;
+  padding: 10px;
+}
 
-  .hp {
-    height: 20px;
-    background: red;
-    margin-bottom: 10px;
-  }
+#floor {
+  height: 40px;
+  background: repeating-linear-gradient(
+    45deg,
+    #ccc,
+    #ccc 10px,
+    #bbb 10px,
+    #bbb 20px
+  );
+  margin-top: 10px;
+}
 
-  button {
-    font-size: 16px;
-    padding: 10px;
-    margin: 5px;
-    cursor: pointer;
-  }
+.hpbar {
+  height: 18px;
+  background: red;
+  margin: 5px auto;
+}
 
-  #action {
-    font-weight: bold;
-    color: blue;
-  }
+#dialogue {
+  border: 4px solid black;
+  padding: 10px;
+  margin-top: 10px;
+  background: #fff;
+  min-height: 60px;
+}
+
+button {
+  font-size: 16px;
+  padding: 8px 12px;
+  margin-top: 5px;
+}
+
+#feedback {
+  font-size: 18px;
+  font-weight: bold;
+}
 </style>
 </head>
+
 <body>
 
-<h1>Paper RPG Battle</h1>
+<h1>Paper TTYD Lite</h1>
 
-<div id="battle">
-  <p><strong>Hero</strong></p>
-  <div id="playerHP" class="hp"></div>
+<div id="stage">
+  <strong>Hero</strong>
+  <div id="playerHP" class="hpbar"></div>
 
-  <p><strong>Goomba-Like Enemy</strong></p>
-  <div id="enemyHP" class="hp"></div>
+  <strong>Enemy</strong>
+  <div id="enemyHP" class="hpbar"></div>
 
-  <p id="action">Choose an action!</p>
+  ⭐ Star Power
+  <div id="starPower" class="hpbar" style="background: gold;"></div>
 
-  <button onclick="startAttack()">Jump</button>
+  <div id="dialogue">Choose your action!</div>
+
+  <button onclick="attack()">Jump</button>
+
+  <div id="feedback"></div>
+  <div id="floor"></div>
 </div>
 
 <script>
 let playerHP = 20;
-let enemyHP = 15;
-let timing = false;
+let enemyHP = 18;
+let star = 0;
 
-function updateHP() {
-  document.getElementById("playerHP").style.width = playerHP * 5 + "px";
-  document.getElementById("enemyHP").style.width = enemyHP * 5 + "px";
+let timing = false;
+let guarding = false;
+
+function updateBars() {
+  playerHP = Math.max(0, playerHP);
+  enemyHP = Math.max(0, enemyHP);
+  star = Math.min(10, star);
+
+  playerHPBar().style.width = playerHP * 5 + "px";
+  enemyHPBar().style.width = enemyHP * 5 + "px";
+  starBar().style.width = star * 10 + "px";
 }
 
-updateHP();
+function playerHPBar() { return document.getElementById("playerHP"); }
+function enemyHPBar() { return document.getElementById("enemyHP"); }
+function starBar() { return document.getElementById("starPower"); }
 
-function startAttack() {
+updateBars();
+
+function attack() {
   timing = true;
-  document.getElementById("action").textContent = "PRESS SPACE NOW!";
+  document.getElementById("dialogue").textContent = "Press SPACE or TAP now!";
+  document.getElementById("feedback").textContent = "";
+  
   setTimeout(() => {
     timing = false;
     enemyTurn();
@@ -76,28 +117,55 @@ function startAttack() {
 }
 
 document.addEventListener("keydown", e => {
-  if (e.code === "Space" && timing) {
-    enemyHP -= 5;
-    document.getElementById("action").textContent = "Nice! Action Command Success!";
-    timing = false;
-    updateHP();
-    setTimeout(enemyTurn, 500);
-  }
+  if (e.code === "Space") handleInput();
 });
+
+document.addEventListener("click", handleInput);
+
+function handleInput() {
+  if (timing) {
+    let dmg = 3;
+    let text = "Nice!";
+    if (Math.random() > 0.6) { dmg = 5; text = "Excellent!"; }
+
+    enemyHP -= dmg;
+    star += 2;
+    timing = false;
+
+    document.getElementById("feedback").textContent = text;
+    document.getElementById("dialogue").textContent = `You dealt ${dmg} damage!`;
+    updateBars();
+
+    setTimeout(enemyTurn, 500);
+  } else if (guarding) {
+    guarding = false;
+    document.getElementById("feedback").textContent = "Guard!";
+  }
+}
 
 function enemyTurn() {
   if (enemyHP <= 0) {
-    document.getElementById("action").textContent = "You win!";
+    document.getElementById("dialogue").textContent = "Victory!";
     return;
   }
 
-  playerHP -= 3;
-  document.getElementById("action").textContent = "Enemy attacks!";
-  updateHP();
+  guarding = true;
+  document.getElementById("dialogue").textContent = "Enemy attacks! Guard now!";
 
-  if (playerHP <= 0) {
-    document.getElementById("action").textContent = "Game Over!";
-  }
+  setTimeout(() => {
+    let dmg = guarding ? 1 : 3;
+    playerHP -= dmg;
+    guarding = false;
+
+    document.getElementById("dialogue").textContent =
+      guarding ? "Perfect Guard!" : `You took ${dmg} damage!`;
+
+    updateBars();
+
+    if (playerHP <= 0) {
+      document.getElementById("dialogue").textContent = "Game Over!";
+    }
+  }, 600);
 }
 </script>
 
