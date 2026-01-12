@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Paper RPG Demo</title>
+<style>
+  body {
+    font-family: "Comic Sans MS", sans-serif;
+    background: #e6f2ff;
+    text-align: center;
+  }
+
+  #battle {
+    width: 400px;
+    margin: auto;
+    padding: 20px;
+    background: white;
+    border: 4px solid black;
+    box-shadow: 8px 8px 0 black;
+  }
+
+  .hp {
+    height: 20px;
+    background: red;
+    margin-bottom: 10px;
+  }
+
+  button {
+    font-size: 16px;
+    padding: 10px;
+    margin: 5px;
+    cursor: pointer;
+  }
+
+  #action {
+    font-weight: bold;
+    color: blue;
+  }
+</style>
+</head>
+<body>
+
+<h1>Paper RPG Battle</h1>
+
+<div id="battle">
+  <p><strong>Hero</strong></p>
+  <div id="playerHP" class="hp"></div>
+
+  <p><strong>Goomba-Like Enemy</strong></p>
+  <div id="enemyHP" class="hp"></div>
+
+  <p id="action">Choose an action!</p>
+
+  <button onclick="startAttack()">Jump</button>
+</div>
+
+<script>
+let playerHP = 20;
+let enemyHP = 15;
+let timing = false;
+
+function updateHP() {
+  document.getElementById("playerHP").style.width = playerHP * 5 + "px";
+  document.getElementById("enemyHP").style.width = enemyHP * 5 + "px";
+}
+
+updateHP();
+
+function startAttack() {
+  timing = true;
+  document.getElementById("action").textContent = "PRESS SPACE NOW!";
+  setTimeout(() => {
+    timing = false;
+    enemyTurn();
+  }, 800);
+}
+
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" && timing) {
+    enemyHP -= 5;
+    document.getElementById("action").textContent = "Nice! Action Command Success!";
+    timing = false;
+    updateHP();
+    setTimeout(enemyTurn, 500);
+  }
+});
+
+function enemyTurn() {
+  if (enemyHP <= 0) {
+    document.getElementById("action").textContent = "You win!";
+    return;
+  }
+
+  playerHP -= 3;
+  document.getElementById("action").textContent = "Enemy attacks!";
+  updateHP();
+
+  if (playerHP <= 0) {
+    document.getElementById("action").textContent = "Game Over!";
+  }
+}
+</script>
+
+</body>
+</html>
